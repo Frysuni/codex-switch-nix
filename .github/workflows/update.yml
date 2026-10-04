@@ -1,0 +1,77 @@
+name: Update codex-switch
+
+on:
+  schedule:
+    - cron: "23 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repository-maintenance
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+      base: ${{ steps.changes.outputs.base }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read latest stable release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/update.py
+      - name: Detect changes
+        id: changes
+        shell: bash
+        run: |
+          echo "base=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          if git diff --quiet -- sources.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: steps.changes.outputs.changed == 'true'
+        with:
+          name: candidate-release
+          path: |
+            sources.json
+            flake.lock
+          retention-days: 1
+
+  validate:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    uses: ./.github/workflows/validate.yml
+    with:
+      artifact: candidate-release
+
+  commit:
+    needs: [prepare, validate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: candidate-release
+      - name: Commit tested update
+        env:
+          EXPECTED_BASE: ${{ needs.prepare.outputs.base }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_BASE"
+          version="$(python3 -c 'import json; print(json.load(open("sources.json"))["version"])')"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sources.json flake.lock
+          git commit -m "chore: update codex-switch to v${version}"
+          git push origin HEAD:main

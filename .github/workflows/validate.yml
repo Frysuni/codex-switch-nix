@@ -1,0 +1,36 @@
+name: Validate packages
+
+on:
+  workflow_call:
+    inputs:
+      artifact:
+        description: Optional candidate sources.json and flake.lock from maintenance
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        if: inputs.artifact != ''
+        with:
+          name: ${{ inputs.artifact }}
+      - uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Test updater
+        run: python3 -m unittest discover -s tests -v
+      - name: Verify pinned upstream archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/verify.py
+      - name: Build, check version and evaluate NixOS module
+        run: ./scripts/check.sh

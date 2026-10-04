@@ -1,0 +1,19 @@
+{
+  "version": "20261001.5.0",
+  "tag": "v20261001.5.0",
+  "published_at": "2026-10-01T06:53:29Z",
+  "release_url": "https://github.com/xjoker/codex-switch/releases/tag/v20261001.5.0",
+  "provenance_url": "https://github.com/xjoker/codex-switch/releases/download/v20261001.5.0/codex-switch-build-provenance.json",
+  "platforms": {
+    "aarch64-linux": {
+      "asset": "cs-linux-arm64.tar.gz",
+      "url": "https://github.com/xjoker/codex-switch/releases/download/v20261001.5.0/cs-linux-arm64.tar.gz",
+      "hash": "sha256-WYsFzfsRHY+aZZdxzcuxLoQ4EOX4V7G2yqzbcLgT5+M="
+    },
+    "x86_64-linux": {
+      "asset": "cs-linux-amd64.tar.gz",
+      "url": "https://github.com/xjoker/codex-switch/releases/download/v20261001.5.0/cs-linux-amd64.tar.gz",
+      "hash": "sha256-WRpFM2bDIvJ6vVHsb1S0IkzSBR6rgyWAfMmbhwwmJe0="
+    }
+  }
+}
