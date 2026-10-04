@@ -81,6 +81,7 @@ The repository is designed to maintain itself:
 - The updated package must pass `nix flake check`, build and report the exact expected version on native x86_64 and ARM runners, and install through the NixOS module.
 - `.github/workflows/update-nixpkgs.yml` refreshes the pinned `nixpkgs` lock weekly using the same validation.
 - Maintenance publishes the exact files validated by both runners. Failed checks or concurrent changes to `main` prevent publication.
+- Manual dispatch supports `force_check` to exercise both platforms and the artifact handoff even when the pinned metadata is already current.
 - All maintenance commits are made by `github-actions[bot]`; no PAT or external updater service is required.
 
 `codex-switch self-update` should not be used for a Nix-managed installation. The executable lives in the immutable Nix store; update this flake input / lock and rebuild NixOS instead.
